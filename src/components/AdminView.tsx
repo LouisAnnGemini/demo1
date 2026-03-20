@@ -249,7 +249,7 @@ export default function AdminView() {
     );
   };
 
-  const renderAuditFilterBar = () => (
+  const renderAuditFilterBar = (isLogsTab = false) => (
     <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex flex-wrap gap-4 items-end mb-6">
       <div className="flex flex-col space-y-1.5">
         <label className="text-xs font-bold text-gray-600">操作对象</label>
@@ -283,13 +283,17 @@ export default function AdminView() {
         <label className="text-xs font-bold text-gray-600">状态</label>
         <select className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-32 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" value={auditFilters.status} onChange={e => setAuditFilters({...auditFilters, status: e.target.value})}>
           <option value="">全部</option>
-          <option value="待审核">待审核</option>
+          {!isLogsTab && <option value="待审核">待审核</option>}
           <option value="已通过">已通过</option>
           <option value="已驳回">已驳回</option>
         </select>
       </div>
       <div className="flex space-x-3 ml-auto">
-        <button onClick={() => { setAuditFilters({targetPerson:'', type:'', startDate:'', endDate:'', applicant:'', status:'待审核'}); setAppliedAuditFilters({targetPerson:'', type:'', startDate:'', endDate:'', applicant:'', status:'待审核'}); }} className="px-5 py-2 border border-gray-300 text-gray-600 rounded-lg text-sm hover:bg-gray-50 font-bold transition-colors">重置</button>
+        <button onClick={() => { 
+          const defaultStatus = isLogsTab ? '' : '待审核';
+          setAuditFilters({targetPerson:'', type:'', startDate:'', endDate:'', applicant:'', status: defaultStatus}); 
+          setAppliedAuditFilters({targetPerson:'', type:'', startDate:'', endDate:'', applicant:'', status: defaultStatus}); 
+        }} className="px-5 py-2 border border-gray-300 text-gray-600 rounded-lg text-sm hover:bg-gray-50 font-bold transition-colors">重置</button>
         <button onClick={() => setAppliedAuditFilters(auditFilters)} className="px-5 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 font-bold flex items-center transition-colors shadow-sm">
           <Search size={16} className="mr-1.5" /> 搜索
         </button>
