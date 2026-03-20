@@ -10,8 +10,8 @@ export default function AdminView() {
   const [selectedStaff, setSelectedStaff] = useState<any>(null);
   const [staffFilters, setStaffFilters] = useState({ name: '', id: '', type: '', role: '', entity: '', brand: '', status: '', startDate: '', endDate: '' });
   const [appliedStaffFilters, setAppliedStaffFilters] = useState({ name: '', id: '', type: '', role: '', entity: '', brand: '', status: '', startDate: '', endDate: '' });
-  const [auditFilters, setAuditFilters] = useState({ targetPerson: '', type: '', startDate: '', endDate: '', applicant: '', status: '待审核' });
-  const [appliedAuditFilters, setAppliedAuditFilters] = useState({ targetPerson: '', type: '', startDate: '', endDate: '', applicant: '', status: '待审核' });
+  const [auditFilters, setAuditFilters] = useState({ targetPerson: '', type: '', startDate: '', endDate: '', applicant: '', status: '' });
+  const [appliedAuditFilters, setAppliedAuditFilters] = useState({ targetPerson: '', type: '', startDate: '', endDate: '', applicant: '', status: '' });
   const [selectedAuditIds, setSelectedAuditIds] = useState<string[]>([]);
   const [unblacklistStaff, setUnblacklistStaff] = useState<any>(null);
   const [unblacklistReason, setUnblacklistReason] = useState('');
@@ -24,6 +24,17 @@ export default function AdminView() {
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
+
+  // Reset audit filters when switching between audit center and logs
+  React.useEffect(() => {
+    if (activeTab === 'transfer_logs') {
+      setAuditFilters(prev => ({ ...prev, status: '' }));
+      setAppliedAuditFilters(prev => ({ ...prev, status: '' }));
+    } else if (activeTab === 'transfer_audit') {
+      setAuditFilters(prev => ({ ...prev, status: '待审核' }));
+      setAppliedAuditFilters(prev => ({ ...prev, status: '待审核' }));
+    }
+  }, [activeTab]);
 
   const filteredStaffs = allStaffs.filter(s => {
     if (appliedStaffFilters.name && !s.name.includes(appliedStaffFilters.name)) return false;
@@ -788,7 +799,7 @@ export default function AdminView() {
                 </div>
               </div>
               
-              {renderAuditFilterBar()}
+              {renderAuditFilterBar(true)}
 
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <table className="w-full text-left border-collapse whitespace-nowrap">

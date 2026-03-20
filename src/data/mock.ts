@@ -162,50 +162,62 @@ export const allStaffs = [
 export const auditTasks = [
   {
     id: 'AUD001',
-    targetPerson: '张三 (EMP001)',
+    targetPerson: '张三',
+    targetId: 'EMP001',
     type: '注册',
     applyTime: '2024-03-20 09:00',
-    applicant: '张三 (EMP001)',
+    applicant: '张三',
+    applicantId: 'EMP001',
     status: '待审核'
   },
   {
     id: 'AUD002',
-    targetPerson: '李四 (EMP002)',
+    targetPerson: '李四',
+    targetId: 'EMP002',
     type: '入职',
     applyTime: '2024-03-19 14:30',
-    applicant: '李四 (EMP002)',
+    applicant: '李四',
+    applicantId: 'EMP002',
     status: '待审核'
   },
   {
     id: 'AUD003',
-    targetPerson: '王五 (EMP003)',
+    targetPerson: '王五',
+    targetId: 'EMP003',
     type: '解编',
     applyTime: '2024-03-18 10:15',
-    applicant: '王五 (EMP003)',
+    applicant: '王五',
+    applicantId: 'EMP003',
     status: '已通过'
   },
   {
     id: 'AUD004',
-    targetPerson: '赵六 (EMP004)',
+    targetPerson: '赵六',
+    targetId: 'EMP004',
     type: '拉黑',
     applyTime: '2024-03-15 16:40',
-    applicant: '人事-张主管 (HR001)',
+    applicant: '人事-张主管',
+    applicantId: 'HR001',
     status: '已驳回'
   },
   {
     id: 'AUD005',
-    targetPerson: '钱七 (EMP007)',
+    targetPerson: '钱七',
+    targetId: 'EMP007',
     type: '绑编',
     applyTime: '2024-03-20 11:20',
-    applicant: '钱七 (EMP007)',
+    applicant: '钱七',
+    applicantId: 'EMP007',
     status: '待审核'
   },
   {
     id: 'AUD006',
-    targetPerson: '孙八 (EMP008)',
+    targetPerson: '孙八',
+    targetId: 'EMP008',
     type: '离职',
     applyTime: '2024-03-19 09:10',
-    applicant: '孙八 (EMP008)',
+    applicant: '孙八',
+    applicantId: 'EMP008',
     status: '待审核'
   }
 ];
