@@ -228,7 +228,7 @@ export const rosterLogs = [
     time: '2024-03-18 10:30',
     employee: '李四 (EMP002)',
     type: '解编',
-    details: '发起从 [周大福] 调往 [周生生] 的申请，已解编',
+    details: '从 [周大福] 调出，已成功解除编制',
     operator: '李四'
   },
   {

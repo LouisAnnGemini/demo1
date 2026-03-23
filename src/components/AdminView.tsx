@@ -3,7 +3,7 @@ import { allStaffs, orgTree, auditTasks, rosterLogs, transferAuditDetails, flatT
 import { Network, Users, ClipboardCheck, FileText, History, Search, Plus, Upload, ChevronDown, ChevronRight, X, RefreshCw, Paperclip, CheckCircle, XCircle, UserX, MoreVertical, RotateCcw } from 'lucide-react';
 
 export default function AdminView() {
-  const [activeTab, setActiveTab] = useState('dept');
+  const [activeTab, setActiveTab] = useState('staff_list');
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set(['root', 'entity_1', 'floor_1', 'area_1']));
   const [selectedNode, setSelectedNode] = useState<any>(null);
   const [isEditingQuota, setIsEditingQuota] = useState(false);
@@ -17,6 +17,7 @@ export default function AdminView() {
   const [unblacklistReason, setUnblacklistReason] = useState('');
   const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
+  const [auditSubTab, setAuditSubTab] = useState('pending');
 
   // Close action menu when clicking outside
   React.useEffect(() => {
@@ -27,14 +28,16 @@ export default function AdminView() {
 
   // Reset audit filters when switching between audit center and logs
   React.useEffect(() => {
-    if (activeTab === 'transfer_logs') {
-      setAuditFilters(prev => ({ ...prev, status: '' }));
-      setAppliedAuditFilters(prev => ({ ...prev, status: '' }));
-    } else if (activeTab === 'transfer_audit') {
-      setAuditFilters(prev => ({ ...prev, status: '待审核' }));
-      setAppliedAuditFilters(prev => ({ ...prev, status: '待审核' }));
+    if (activeTab === 'transfer_audit') {
+      if (auditSubTab === 'logs') {
+        setAuditFilters(prev => ({ ...prev, status: '' }));
+        setAppliedAuditFilters(prev => ({ ...prev, status: '' }));
+      } else {
+        setAuditFilters(prev => ({ ...prev, status: '待审核' }));
+        setAppliedAuditFilters(prev => ({ ...prev, status: '待审核' }));
+      }
     }
-  }, [activeTab]);
+  }, [activeTab, auditSubTab]);
 
   const filteredStaffs = allStaffs.filter(s => {
     if (appliedStaffFilters.name && !s.name.includes(appliedStaffFilters.name)) return false;
@@ -352,15 +355,6 @@ export default function AdminView() {
                 审核中心
               </button>
               <button
-                onClick={() => setActiveTab('transfer_logs')}
-                className={`w-full flex items-center px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  activeTab === 'transfer_logs' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                }`}
-              >
-                <FileText size={18} className={`mr-3 ${activeTab === 'transfer_logs' ? 'opacity-100' : 'opacity-70'}`} />
-                审核详情/日志
-              </button>
-              <button
                 onClick={() => setActiveTab('blacklist')}
                 className={`w-full flex items-center px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                   activeTab === 'blacklist' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
@@ -408,7 +402,6 @@ export default function AdminView() {
             {activeTab === 'dept' && '部门管理'}
             {activeTab === 'staff_list' && '员工列表'}
             {activeTab === 'transfer_audit' && '审核中心'}
-            {activeTab === 'transfer_logs' && '审核详情/日志'}
             {activeTab === 'roster' && '员工花名册'}
             {activeTab === 'blacklist' && '黑名单列表'}
           </h2>
@@ -694,32 +687,68 @@ export default function AdminView() {
             <div className="space-y-6 max-w-7xl mx-auto">
               <div className="flex justify-between items-end mb-6">
                 <div>
-                  <p className="text-sm text-gray-500">由所属实体人事进行审核</p>
+                  <div className="flex space-x-6 border-b border-gray-200 mb-4">
+                    <button
+                      onClick={() => setAuditSubTab('pending')}
+                      className={`pb-3 text-sm font-bold transition-colors relative ${
+                        auditSubTab === 'pending' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      待办审核
+                      {auditSubTab === 'pending' && (
+                        <span className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600 rounded-t-full"></span>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setAuditSubTab('logs')}
+                      className={`pb-3 text-sm font-bold transition-colors relative ${
+                        auditSubTab === 'logs' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      审核日志
+                      {auditSubTab === 'logs' && (
+                        <span className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600 rounded-t-full"></span>
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    {auditSubTab === 'pending' ? '由所属实体人事进行审核' : '查看已完成（通过/驳回）的审核记录'}
+                  </p>
                 </div>
                 <div className="flex space-x-3">
-                  <button className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-bold hover:bg-green-700 transition-colors shadow-sm flex items-center">
-                    <CheckCircle size={16} className="mr-1.5" /> 批量通过
-                  </button>
-                  <button className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 transition-colors shadow-sm flex items-center">
-                    <XCircle size={16} className="mr-1.5" /> 批量驳回
-                  </button>
+                  {auditSubTab === 'pending' ? (
+                    <>
+                      <button className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-bold hover:bg-green-700 transition-colors shadow-sm flex items-center">
+                        <CheckCircle size={16} className="mr-1.5" /> 批量通过
+                      </button>
+                      <button className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 transition-colors shadow-sm flex items-center">
+                        <XCircle size={16} className="mr-1.5" /> 批量驳回
+                      </button>
+                    </>
+                  ) : (
+                    <button className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition flex items-center shadow-sm">
+                      <Upload size={16} className="mr-2" /> 导出记录
+                    </button>
+                  )}
                 </div>
               </div>
               
-              {renderAuditFilterBar()}
+              {renderAuditFilterBar(auditSubTab === 'logs')}
 
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <table className="w-full text-left border-collapse whitespace-nowrap">
                   <thead className="bg-gray-50 text-xs uppercase text-gray-500 font-bold tracking-wider border-b border-gray-200">
                     <tr>
-                      <th className="px-6 py-4 w-12">
-                        <input 
-                          type="checkbox" 
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                          checked={filteredAudits.length > 0 && selectedAuditIds.length === filteredAudits.length}
-                          onChange={handleSelectAllAudits}
-                        />
-                      </th>
+                      {auditSubTab === 'pending' && (
+                        <th className="px-6 py-4 w-12">
+                          <input 
+                            type="checkbox" 
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            checked={filteredAudits.length > 0 && selectedAuditIds.length === filteredAudits.length}
+                            onChange={handleSelectAllAudits}
+                          />
+                        </th>
+                      )}
                       <th className="px-6 py-4">操作对象</th>
                       <th className="px-6 py-4">操作类型</th>
                       <th className="px-6 py-4">申请时间</th>
@@ -729,16 +758,20 @@ export default function AdminView() {
                     </tr>
                   </thead>
                   <tbody className="text-sm divide-y divide-gray-100">
-                    {filteredAudits.map((audit, i) => (
+                    {filteredAudits
+                      .filter(audit => auditSubTab === 'pending' ? true : (audit.status === '已通过' || audit.status === '已驳回'))
+                      .map((audit, i) => (
                       <tr key={i} className="hover:bg-blue-50/30 transition-colors">
-                        <td className="px-6 py-4">
-                          <input 
-                            type="checkbox" 
-                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                            checked={selectedAuditIds.includes(audit.id)}
-                            onChange={() => handleSelectAudit(audit.id)}
-                          />
-                        </td>
+                        {auditSubTab === 'pending' && (
+                          <td className="px-6 py-4">
+                            <input 
+                              type="checkbox" 
+                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              checked={selectedAuditIds.includes(audit.id)}
+                              onChange={() => handleSelectAudit(audit.id)}
+                            />
+                          </td>
+                        )}
                         <td className="px-6 py-4">
                           <div className="font-bold text-gray-800">{audit.targetPerson}</div>
                           <div className="text-xs text-gray-500 font-mono">{audit.targetId}</div>
@@ -762,7 +795,7 @@ export default function AdminView() {
                           <button className="text-blue-600 hover:text-blue-800 font-bold text-xs bg-blue-50 px-2 py-1 rounded inline-flex items-center">
                             查看详情
                           </button>
-                          {audit.status === '待审核' ? (
+                          {auditSubTab === 'pending' && audit.status === '待审核' && (
                             <>
                               <button className="text-green-600 hover:text-green-800 font-bold text-xs bg-green-50 px-2 py-1 rounded inline-flex items-center">
                                 <CheckCircle size={12} className="mr-1" /> 通过
@@ -771,75 +804,12 @@ export default function AdminView() {
                                 <XCircle size={12} className="mr-1" /> 驳回
                               </button>
                             </>
-                          ) : (
+                          )}
+                          {auditSubTab === 'pending' && audit.status !== '待审核' && (
                             <button className="text-white hover:bg-red-700 font-bold text-xs bg-red-600 px-2 py-1 rounded inline-flex items-center shadow-sm">
                               <RotateCcw size={12} className="mr-1" /> 撤销
                             </button>
                           )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* 2.3 审核详情/日志 */}
-          {activeTab === 'transfer_logs' && (
-            <div className="space-y-6 max-w-7xl mx-auto">
-              <div className="flex justify-between items-end mb-6">
-                <div>
-                  <p className="text-sm text-gray-500">查看已完成（通过/驳回）的审核记录</p>
-                </div>
-                <div className="flex space-x-3">
-                  <button className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition flex items-center shadow-sm">
-                    <Upload size={16} className="mr-2" /> 导出记录
-                  </button>
-                </div>
-              </div>
-              
-              {renderAuditFilterBar(true)}
-
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <table className="w-full text-left border-collapse whitespace-nowrap">
-                  <thead className="bg-gray-50 text-xs uppercase text-gray-500 font-bold tracking-wider border-b border-gray-200">
-                    <tr>
-                      <th className="px-6 py-4">操作对象</th>
-                      <th className="px-6 py-4">操作类型</th>
-                      <th className="px-6 py-4">申请时间</th>
-                      <th className="px-6 py-4">申请人</th>
-                      <th className="px-6 py-4">状态</th>
-                      <th className="px-6 py-4 text-right">操作</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-sm divide-y divide-gray-100">
-                    {filteredAudits
-                      .filter(audit => audit.status === '已通过' || audit.status === '已驳回')
-                      .map((audit, i) => (
-                      <tr key={i} className="hover:bg-blue-50/30 transition-colors">
-                        <td className="px-6 py-4">
-                          <div className="font-bold text-gray-800">{audit.targetPerson}</div>
-                          <div className="text-xs text-gray-500 font-mono">{audit.targetId}</div>
-                        </td>
-                        <td className="px-6 py-4 text-blue-600 font-medium">{audit.type}</td>
-                        <td className="px-6 py-4 font-mono text-gray-500">{audit.applyTime}</td>
-                        <td className="px-6 py-4">
-                          <div className="font-bold text-gray-800">{audit.applicant}</div>
-                          <div className="text-xs text-gray-500 font-mono">{audit.applicantId}</div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className={`px-2 py-1 rounded text-xs font-bold ${
-                            audit.status === '已通过' ? 'bg-green-100 text-green-700' : 
-                            'bg-red-100 text-red-700'
-                          }`}>
-                            {audit.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <button className="text-blue-600 hover:text-blue-800 font-bold text-xs bg-blue-50 px-2 py-1 rounded inline-flex items-center">
-                            查看详情
-                          </button>
                         </td>
                       </tr>
                     ))}
@@ -1189,16 +1159,89 @@ export default function AdminView() {
                   <Paperclip size={18} className="mr-2 text-blue-600" />
                   附件信息
                 </h3>
-                <div className="flex flex-wrap gap-4">
-                  {selectedStaff.attachments.length > 0 ? (
-                    selectedStaff.attachments.map((att: string, idx: number) => (
-                      <div key={idx} className="flex items-center px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-colors group">
-                        <Paperclip size={16} className="text-gray-400 group-hover:text-blue-500 mr-2" />
-                        <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700">{att}</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[
+                    { id: 'id_card', name: '身份证复印件', keywords: ['身份证'] },
+                    { id: 'health_cert', name: '健康证', keywords: ['健康证'] },
+                    { id: 'registration', name: '入职登记表', keywords: ['入职登记表', '登记表'] },
+                    { id: 'contract', name: '劳动合同', keywords: ['合同'] },
+                    { id: 'resignation', name: '离职证明', keywords: ['离职证明'] },
+                    { id: 'bank_card', name: '银行卡复印件', keywords: ['银行卡'] },
+                  ].map(cat => {
+                    const files = (selectedStaff.attachments || []).filter((att: string) => cat.keywords.some(kw => att.includes(kw)));
+                    return (
+                      <div key={cat.id} className="flex flex-col p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                        <span className="text-sm font-bold text-gray-700 mb-3">{cat.name}</span>
+                        {files.length > 0 ? (
+                          <div className="space-y-2">
+                            {files.map((file: string, idx: number) => (
+                              <div key={idx} className="flex items-center px-3 py-2 bg-white border border-blue-100 rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors group">
+                                <Paperclip size={14} className="text-blue-400 group-hover:text-blue-600 mr-2 shrink-0" />
+                                <span className="text-xs font-medium text-gray-700 group-hover:text-blue-700 truncate">{file}</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-between mt-auto pt-2">
+                            <span className="text-xs font-medium text-red-500 bg-red-50 px-2 py-1 rounded">未补充</span>
+                            <button className="text-xs font-bold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors flex items-center">
+                              <Upload size={12} className="mr-1" /> 上传
+                            </button>
+                          </div>
+                        )}
                       </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-gray-400">暂无附件</p>
+                    );
+                  })}
+                  
+                  {/* Other Attachments */}
+                  {(() => {
+                    const predefinedKeywords = ['身份证', '健康证', '入职登记表', '登记表', '合同', '离职证明', '银行卡'];
+                    const otherFiles = (selectedStaff.attachments || []).filter((att: string) => 
+                      !predefinedKeywords.some(kw => att.includes(kw))
+                    );
+                    
+                    if (otherFiles.length === 0) return null;
+                    
+                    return (
+                      <div className="flex flex-col p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                        <span className="text-sm font-bold text-gray-700 mb-3">其他附件</span>
+                        <div className="space-y-2">
+                          {otherFiles.map((file: string, idx: number) => (
+                            <div key={idx} className="flex items-center px-3 py-2 bg-white border border-blue-100 rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors group">
+                              <Paperclip size={14} className="text-blue-400 group-hover:text-blue-600 mr-2 shrink-0" />
+                              <span className="text-xs font-medium text-gray-700 group-hover:text-blue-700 truncate">{file}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              {/* Employment History */}
+              <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-200">
+                <h3 className="text-lg font-bold text-gray-800 mb-6 border-b border-gray-100 pb-3 flex items-center">
+                  <History size={18} className="mr-2 text-indigo-600" />
+                  任职履历
+                </h3>
+                <div className="relative border-l-2 border-gray-200 ml-3 space-y-8 pb-4 mt-4">
+                  {rosterLogs
+                    .filter(log => log.employee.includes(selectedStaff.id))
+                    .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
+                    .map((log, idx) => (
+                      <div key={idx} className="relative pl-6">
+                        <div className="absolute w-4 h-4 bg-white border-2 border-indigo-500 rounded-full -left-[9px] top-1"></div>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-1">
+                          <h4 className="text-md font-bold text-gray-900">{log.type}</h4>
+                          <span className="text-sm font-mono text-gray-500">{log.time}</span>
+                        </div>
+                        <p className="text-sm text-gray-600 mt-1">{log.details}</p>
+                        <p className="text-xs text-gray-400 mt-2 font-medium">操作人: {log.operator}</p>
+                      </div>
+                    ))}
+                  {rosterLogs.filter(log => log.employee.includes(selectedStaff.id)).length === 0 && (
+                    <p className="text-sm text-gray-400 pl-6">暂无履历记录</p>
                   )}
                 </div>
               </div>
