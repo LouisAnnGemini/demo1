@@ -18,6 +18,8 @@ export default function AdminView() {
   const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
   const [auditSubTab, setAuditSubTab] = useState('pending');
+  const [bindUnbindStaff, setBindUnbindStaff] = useState<any>(null);
+  const [selectedAuditTask, setSelectedAuditTask] = useState<any>(null);
 
   // Close action menu when clicking outside
   React.useEffect(() => {
@@ -792,7 +794,18 @@ export default function AdminView() {
                           </span>
                         </td>
                         <td className="px-6 py-4 text-right space-x-2">
-                          <button className="text-blue-600 hover:text-blue-800 font-bold text-xs bg-blue-50 px-2 py-1 rounded inline-flex items-center">
+                          <button 
+                            onClick={() => {
+                              const staff = allStaffs.find(s => s.id === audit.targetId);
+                              if (staff) {
+                                setSelectedStaff(staff);
+                                setSelectedAuditTask(audit);
+                              } else {
+                                alert('未找到该员工详细资料');
+                              }
+                            }}
+                            className="text-blue-600 hover:text-blue-800 font-bold text-xs bg-blue-50 px-2 py-1 rounded inline-flex items-center"
+                          >
                             查看详情
                           </button>
                           {auditSubTab === 'pending' && audit.status === '待审核' && (
@@ -1022,14 +1035,45 @@ export default function AdminView() {
         <div className="fixed inset-0 z-50 bg-gray-50 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200">
           <div className="bg-white border-b border-gray-200 px-8 py-5 flex justify-between items-center shrink-0 shadow-sm">
             <div className="flex items-center space-x-4">
-              <button onClick={() => setSelectedStaff(null)} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
+              <button 
+                onClick={() => {
+                  setSelectedStaff(null);
+                  setSelectedAuditTask(null);
+                }} 
+                className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors"
+              >
                 <X size={20} />
               </button>
               <h2 className="text-xl font-bold text-gray-800 tracking-tight">员工详情 - {selectedStaff.name}</h2>
             </div>
-            <button className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm">
-              编辑信息
-            </button>
+            {selectedAuditTask && selectedAuditTask.status === '待审核' ? (
+              <div className="flex space-x-3">
+                <button 
+                  onClick={() => {
+                    console.log('Approve audit:', selectedAuditTask.id);
+                    setSelectedStaff(null);
+                    setSelectedAuditTask(null);
+                  }}
+                  className="bg-green-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition shadow-sm flex items-center"
+                >
+                  <CheckCircle size={16} className="mr-1.5" /> 通过
+                </button>
+                <button 
+                  onClick={() => {
+                    console.log('Reject audit:', selectedAuditTask.id);
+                    setSelectedStaff(null);
+                    setSelectedAuditTask(null);
+                  }}
+                  className="bg-red-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition shadow-sm flex items-center"
+                >
+                  <XCircle size={16} className="mr-1.5" /> 驳回
+                </button>
+              </div>
+            ) : (
+              <button className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm">
+                编辑信息
+              </button>
+            )}
           </div>
           
           <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
@@ -1313,6 +1357,76 @@ export default function AdminView() {
         </div>
       )}
 
+      {/* Bind/Unbind Modal */}
+      {bindUnbindStaff && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <h3 className="text-lg font-bold text-gray-800">绑编/解编操作</h3>
+              <button onClick={() => setBindUnbindStaff(null)} className="p-2 hover:bg-gray-200 rounded-full text-gray-400 transition-colors">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="p-6 space-y-6">
+              <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+                <p className="text-sm text-blue-800 leading-relaxed">
+                  当前员工：<span className="font-bold">{bindUnbindStaff.name} ({bindUnbindStaff.id})</span>
+                </p>
+                <p className="text-sm text-blue-800 mt-2 leading-relaxed">
+                  所属实体：<span className="font-bold">{bindUnbindStaff.entity || '未设置'}</span>
+                </p>
+                <p className="text-sm text-blue-800 mt-1 leading-relaxed">
+                  所属品牌：<span className="font-bold">{bindUnbindStaff.brand || '未设置'}</span>
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  disabled={!!(bindUnbindStaff.entity && bindUnbindStaff.brand)}
+                  onClick={() => {
+                    console.log('Binding staff:', bindUnbindStaff.id);
+                    setBindUnbindStaff(null);
+                  }}
+                  className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${
+                    !!(bindUnbindStaff.entity && bindUnbindStaff.brand)
+                      ? 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed'
+                      : 'bg-white border-blue-100 text-blue-600 hover:border-blue-500 hover:bg-blue-50 shadow-sm'
+                  }`}
+                >
+                  <Plus size={24} className="mb-2" />
+                  <span className="font-bold text-sm">绑编</span>
+                  <span className="text-[10px] mt-1 opacity-70">建立编制关联</span>
+                </button>
+                <button
+                  disabled={!(bindUnbindStaff.entity && bindUnbindStaff.brand)}
+                  onClick={() => {
+                    console.log('Unbinding staff:', bindUnbindStaff.id);
+                    setBindUnbindStaff(null);
+                  }}
+                  className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${
+                    !(bindUnbindStaff.entity && bindUnbindStaff.brand)
+                      ? 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed'
+                      : 'bg-white border-red-100 text-red-600 hover:border-red-500 hover:bg-red-50 shadow-sm'
+                  }`}
+                >
+                  <RotateCcw size={24} className="mb-2" />
+                  <span className="font-bold text-sm">解编</span>
+                  <span className="text-[10px] mt-1 opacity-70">解除当前编制</span>
+                </button>
+              </div>
+            </div>
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end">
+              <button 
+                onClick={() => setBindUnbindStaff(null)}
+                className="px-4 py-2 text-sm font-bold text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                取消
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Root-level Action Menu to avoid clipping */}
       {openActionMenuId && activeActionStaff && (
         <div 
@@ -1332,6 +1446,10 @@ export default function AdminView() {
           </button>
           <button 
             disabled={activeActionStaff.status !== '已入职'}
+            onClick={() => {
+              setBindUnbindStaff(activeActionStaff);
+              setOpenActionMenuId(null);
+            }}
             className={`block w-full text-left px-4 py-2.5 text-xs font-medium transition-colors ${
               activeActionStaff.status === '已入职'
                 ? 'text-gray-700 hover:bg-blue-50 hover:text-blue-700' 
