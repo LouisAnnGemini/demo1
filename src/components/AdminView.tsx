@@ -20,6 +20,8 @@ export default function AdminView() {
   const [auditSubTab, setAuditSubTab] = useState('pending');
   const [bindUnbindStaff, setBindUnbindStaff] = useState<any>(null);
   const [selectedAuditTask, setSelectedAuditTask] = useState<any>(null);
+  const [resignStaff, setResignStaff] = useState<any>(null);
+  const [resignReason, setResignReason] = useState('');
 
   // Close action menu when clicking outside
   React.useEffect(() => {
@@ -1427,6 +1429,93 @@ export default function AdminView() {
         </div>
       )}
 
+      {/* Resign Modal */}
+      {resignStaff && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <h3 className="text-lg font-bold text-gray-800">员工离职办理</h3>
+              <button 
+                onClick={() => {
+                  setResignStaff(null);
+                  setResignReason('');
+                }} 
+                className="p-2 hover:bg-gray-200 rounded-full text-gray-400 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="p-6 space-y-5">
+              <div className="bg-orange-50 border border-orange-100 rounded-xl p-4">
+                <p className="text-sm text-orange-800 leading-relaxed">
+                  即将办理离职的员工：<span className="font-bold">{resignStaff.name} ({resignStaff.id})</span>
+                </p>
+                <p className="text-sm text-orange-800 mt-1 leading-relaxed">
+                  所属实体/品牌：<span className="font-bold">{resignStaff.entity || '未设置'} / {resignStaff.brand || '未设置'}</span>
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">
+                  离职信息/证明上传 <span className="text-red-500">*</span>
+                </label>
+                <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer">
+                  <Upload size={24} className="text-gray-400 mb-2" />
+                  <p className="text-sm text-gray-600 font-medium">点击或拖拽上传文件</p>
+                  <p className="text-xs text-gray-400 mt-1">支持 PDF, JPG, PNG 格式</p>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">
+                  离职原因说明
+                </label>
+                <textarea 
+                  value={resignReason}
+                  onChange={(e) => setResignReason(e.target.value)}
+                  placeholder="请输入离职原因..."
+                  className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none h-24"
+                />
+              </div>
+            </div>
+            
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
+              <button 
+                onClick={() => {
+                  setResignStaff(null);
+                  setResignReason('');
+                }}
+                className="px-4 py-2 text-sm font-bold text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                取消
+              </button>
+              <div className="flex space-x-3">
+                <button 
+                  onClick={() => {
+                    console.log('Resign and blacklist:', resignStaff.id);
+                    setResignStaff(null);
+                    setResignReason('');
+                  }}
+                  className="px-4 py-2 bg-red-600 text-white text-sm font-bold rounded-lg hover:bg-red-700 transition-colors shadow-sm"
+                >
+                  离职并拉黑
+                </button>
+                <button 
+                  onClick={() => {
+                    console.log('Confirm resign:', resignStaff.id);
+                    setResignStaff(null);
+                    setResignReason('');
+                  }}
+                  className="px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                >
+                  确认离职
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Root-level Action Menu to avoid clipping */}
       {openActionMenuId && activeActionStaff && (
         <div 
@@ -1460,6 +1549,10 @@ export default function AdminView() {
           </button>
           <button 
             disabled={!['未注册', '未审核', '已审核', '已入职'].includes(activeActionStaff.status)}
+            onClick={() => {
+              setResignStaff(activeActionStaff);
+              setOpenActionMenuId(null);
+            }}
             className={`block w-full text-left px-4 py-2.5 text-xs font-medium transition-colors ${
               ['未注册', '未审核', '已审核', '已入职'].includes(activeActionStaff.status)
                 ? 'text-red-600 hover:bg-red-50' 
